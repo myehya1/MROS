@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id        String    @id @default(uuid())
+  name      String
+  address   String?
+  phone     String?
+  email     String?
+
+  users     User[]
+  jobRoles  JobRole[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model SystemRole {
+  id          String @id @default(uuid())
+  name        String @unique
+  description String?
+
+  users User[]
+}
+
+model JobRole {
+  id            String @id @default(uuid())
+  name          String
+  description   String?
+  color         String?
+
+  restaurantId  String
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  users User[]
+
+  @@unique([restaurantId, name])
+}
+
+model User {
+  id            String @id @default(uuid())
+
+  firstName     String
+  lastName      String
+
+  email         String @unique
+  password      String
+
+  phone         String?
+
+  isActive      Boolean @default(true)
+
+  restaurantId  String
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  systemRoleId  String
+  systemRole    SystemRole @relation(fields: [systemRoleId], references: [id])
+
+ 
+  jobRoleId  String?
+  jobRole    JobRole? @relation(fields: [jobRoleId], references: [id])
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
