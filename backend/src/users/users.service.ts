@@ -71,4 +71,74 @@ export class UsersService {
       role: role.name,
     };
   }
+
+  async findAll(restaurantId: string) {
+    return this.prisma.user.findMany({
+      where: {
+        restaurantId,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        isActive: true,
+        restaurantId: true,
+        systemRole: {
+          select: {
+            name: true,
+          },
+        },
+        jobRole: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+  }
+
+  async findOne(userId: string, restaurantId: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
+        restaurantId,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        isActive: true,
+        restaurantId: true,
+        systemRole: {
+          select: {
+            name: true,
+          },
+        },
+        jobRole: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    return user;
+  }
 }

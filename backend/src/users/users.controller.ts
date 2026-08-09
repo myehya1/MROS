@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -19,6 +27,20 @@ interface AuthenticatedRequest extends Request {
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Owner')
+  @Get()
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.usersService.findAll(request.user.restaurantId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Owner')
+  @Get(':id')
+  findOne(@Param('id') userId: string, @Req() request: AuthenticatedRequest) {
+    return this.usersService.findOne(userId, request.user.restaurantId);
+  }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Owner')
