@@ -85,6 +85,9 @@ export class AuthService {
       where: {
         email: dto.email,
       },
+      include: {
+        systemRole: true,
+      },
     });
 
     if (!user) {
@@ -100,6 +103,8 @@ export class AuthService {
     const accessToken = await this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
+      restaurantId: user.restaurantId,
+      role: user.systemRole.name,
     });
 
     return {
@@ -110,6 +115,7 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
+        role: user.systemRole.name,
       },
     };
   }

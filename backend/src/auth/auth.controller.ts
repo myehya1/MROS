@@ -3,6 +3,8 @@ import { Request } from 'express';
 
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { Roles } from './decorators/roles.decorator';
+import { RolesGuard } from './guards/roles.guard';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
@@ -10,6 +12,8 @@ interface AuthenticatedRequest extends Request {
   user: {
     userId: string;
     email: string;
+    restaurantId: string;
+    role: string;
   };
 }
 
@@ -31,5 +35,15 @@ export class AuthController {
   @Get('me')
   getMe(@Req() request: AuthenticatedRequest) {
     return request.user;
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Owner')
+  @Get('owner-test')
+  ownerTest(@Req() request: AuthenticatedRequest) {
+    return {
+      message: 'Owner access granted.',
+      user: request.user,
+    };
   }
 }

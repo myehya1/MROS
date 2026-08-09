@@ -2,6 +2,13 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
+interface JwtPayload {
+  sub: string;
+  email: string;
+  restaurantId: string;
+  role: string;
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
@@ -12,14 +19,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: { sub: string; email: string }) {
-    if (!payload.sub || !payload.email) {
+  validate(payload: JwtPayload) {
+    if (
+      !payload.sub ||
+      !payload.email ||
+      !payload.restaurantId ||
+      !payload.role
+    ) {
       throw new UnauthorizedException('Invalid token.');
     }
 
     return {
       userId: payload.sub,
       email: payload.email,
+      restaurantId: payload.restaurantId,
+      role: payload.role,
     };
   }
 }
