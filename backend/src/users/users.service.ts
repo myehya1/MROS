@@ -1,0 +1,74 @@
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+
+import { PrismaService } from '../prisma/prisma.service';
+
+@Injectable()
+export class UsersService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async createUser(
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string,
+    restaurantId: string,
+    systemRoleId: string,
+  ) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Email already exists.');
+    }
+
+    const restaurant = await this.prisma.restaurant.findUnique({
+      where: {
+        id: restaurantId,
+      },
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant not found.');
+    }
+
+    const role = await this.prisma.systemRole.findUnique({
+      where: {
+        id: systemRoleId,
+      },
+    });
+
+    if (!role) {
+      throw new NotFoundException('System role not found.');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await this.prisma.user.create({
+      data: {
+        firstName,
+        lastName,
+        email,
+        password: hashedPassword,
+        restaurantId,
+        systemRoleId,
+      },
+    });
+
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      restaurantId: user.restaurantId,
+      role: role.name,
+    };
+  }
+}
