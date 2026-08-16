@@ -7,6 +7,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ContractType {
+  FULL_TIME
+  PART_TIME
+  MINIJOB
+  WORKING_STUDENT
+  APPRENTICE
+  TEMPORARY_HELP
+  INTERN
+}
+
 model Restaurant {
   id        String    @id @default(uuid())
   name      String
@@ -49,12 +59,18 @@ model User {
   firstName     String
   lastName      String
 
+  username      String? @unique
   email         String @unique
   password      String
 
   phone         String?
 
   isActive      Boolean @default(true)
+  mustChangePassword Boolean @default(false)
+
+  contractType      ContractType?
+  contractStartDate DateTime?
+  contractEndDate   DateTime?
 
   restaurantId  String
   restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
@@ -62,9 +78,8 @@ model User {
   systemRoleId  String
   systemRole    SystemRole @relation(fields: [systemRoleId], references: [id])
 
- 
-  jobRoleId  String?
-  jobRole    JobRole? @relation(fields: [jobRoleId], references: [id])
+  jobRoleId     String?
+  jobRole       JobRole? @relation(fields: [jobRoleId], references: [id])
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

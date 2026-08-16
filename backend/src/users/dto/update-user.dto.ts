@@ -1,4 +1,11 @@
-import { IsBoolean, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsBoolean,
+  IsDateString,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
+import { ContractType } from '@prisma/client';
 
 export class UpdateUserDto {
   @IsOptional()
@@ -8,6 +15,10 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   lastName?: string;
+
+  @IsOptional()
+  @IsString()
+  username?: string;
 
   @IsOptional()
   @IsString()
@@ -24,4 +35,15 @@ export class UpdateUserDto {
   @IsOptional()
   @IsUUID()
   jobRoleId?: string;
+
+  @IsOptional()
+  contractType?: ContractType;
+
+  @IsOptional()
+  @IsDateString()
+  contractStartDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  contractEndDate?: string;
 }

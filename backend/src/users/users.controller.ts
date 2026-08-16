@@ -51,10 +51,16 @@ export class UsersController {
     return this.usersService.createUser(
       dto.firstName,
       dto.lastName,
+      dto.username,
       dto.email,
       dto.password,
+      dto.phone,
       request.user.restaurantId,
       dto.systemRoleId,
+      dto.jobRoleId,
+      dto.contractType,
+      dto.contractStartDate,
+      dto.contractEndDate,
     );
   }
 

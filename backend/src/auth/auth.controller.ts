@@ -17,6 +17,11 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
+interface ChangePasswordBody {
+  currentPassword: string;
+  newPassword: string;
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -34,7 +39,20 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   getMe(@Req() request: AuthenticatedRequest) {
-    return request.user;
+    return this.authService.getMe(request.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  changePassword(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: ChangePasswordBody,
+  ) {
+    return this.authService.changePassword(
+      request.user.userId,
+      body.currentPassword,
+      body.newPassword,
+    );
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
