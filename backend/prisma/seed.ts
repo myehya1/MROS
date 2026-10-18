@@ -9,10 +9,6 @@ async function main() {
       description: 'Restaurant owner with full access',
     },
     {
-      name: 'Manager',
-      description: 'Restaurant manager',
-    },
-    {
       name: 'Employee',
       description: 'Regular employee',
     },

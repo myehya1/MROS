@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { Roles } from './decorators/roles.decorator';
 import { RolesGuard } from './guards/roles.guard';
+import { AVAILABLE_PERMISSIONS } from './decorators/permissions.decorator';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
@@ -14,6 +15,7 @@ interface AuthenticatedRequest extends Request {
     email: string;
     restaurantId: string;
     role: string;
+    permissions: string[];
   };
 }
 
@@ -63,5 +65,19 @@ export class AuthController {
       message: 'Owner access granted.',
       user: request.user,
     };
+  }
+
+  // Returns system roles and available permissions for the employee creation form
+  @UseGuards(JwtAuthGuard)
+  @Get('system-roles')
+  getSystemRoles() {
+    return this.authService.getSystemRoles();
+  }
+
+  // Returns available permission keys with labels
+  @UseGuards(JwtAuthGuard)
+  @Get('permissions')
+  getAvailablePermissions() {
+    return AVAILABLE_PERMISSIONS;
   }
 }

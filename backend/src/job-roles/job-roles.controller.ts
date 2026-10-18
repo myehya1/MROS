@@ -10,7 +10,8 @@ import {
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+// import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CreateJobRoleDto } from './dto/create-job-role.dto';
 import { JobRolesService } from './job-roles.service';
@@ -21,6 +22,7 @@ interface AuthenticatedRequest extends Request {
     email: string;
     restaurantId: string;
     role: string;
+    permissions: string[];
   };
 }
 
@@ -28,15 +30,13 @@ interface AuthenticatedRequest extends Request {
 export class JobRolesController {
   constructor(private readonly jobRolesService: JobRolesService) {}
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Owner', 'Manager')
+  @UseGuards(JwtAuthGuard)
   @Get()
   findAll(@Req() request: AuthenticatedRequest) {
     return this.jobRolesService.findAll(request.user.restaurantId);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Owner', 'Manager')
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(
     @Param('id') jobRoleId: string,
@@ -46,7 +46,7 @@ export class JobRolesController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Owner')
+  @RequirePermission('MANAGE_JOB_ROLES')
   @Post()
   create(@Body() dto: CreateJobRoleDto, @Req() request: AuthenticatedRequest) {
     return this.jobRolesService.create(request.user.restaurantId, dto);

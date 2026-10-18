@@ -10,6 +10,25 @@ import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
+// Unambiguous uppercase alphanumeric chars
+const KIOSK_CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+async function generateUniqueKioskCode(prisma: PrismaService): Promise<string> {
+  for (let attempts = 0; attempts < 10; attempts++) {
+    const code = Array.from(
+      { length: 6 },
+      () =>
+        KIOSK_CODE_CHARS[Math.floor(Math.random() * KIOSK_CODE_CHARS.length)],
+    ).join('');
+
+    const existing = await prisma.restaurant.findUnique({
+      where: { kioskCode: code },
+    });
+    if (!existing) return code;
+  }
+  throw new Error('Could not generate unique kiosk code.');
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -41,9 +60,12 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
     const result = await this.prisma.$transaction(async (tx) => {
+      const kioskCode = await generateUniqueKioskCode(this.prisma);
+
       const restaurant = await tx.restaurant.create({
         data: {
           name: dto.restaurantName,
+          kioskCode,
         },
       });
 
@@ -76,6 +98,7 @@ export class AuthService {
         lastName: result.user.lastName,
         email: result.user.email,
         role: ownerRole.name,
+        permissions: [],
       },
     };
   }
@@ -118,6 +141,7 @@ export class AuthService {
       username: user.username,
       restaurantId: user.restaurantId,
       role: user.systemRole.name,
+      permissions: user.permissions ?? [],
     });
 
     return {
@@ -131,6 +155,7 @@ export class AuthService {
         username: user.username,
         email: user.email,
         role: user.systemRole.name,
+        permissions: user.permissions ?? [],
         mustChangePassword: user.mustChangePassword,
       },
     };
@@ -163,6 +188,8 @@ export class AuthService {
       email: user.email,
       restaurantId: user.restaurantId,
       role: user.systemRole.name,
+      permissions: user.permissions ?? [],
+      employeeNumber: user.employeeNumber,
       jobRole: user.jobRole
         ? {
             id: user.jobRole.id,
@@ -238,5 +265,12 @@ export class AuthService {
       message: 'Password changed successfully.',
       mustChangePassword: false,
     };
+  }
+
+  getSystemRoles() {
+    return this.prisma.systemRole.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    });
   }
 }

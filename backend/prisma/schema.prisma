@@ -17,15 +17,23 @@ enum ContractType {
   INTERN
 }
 
+enum ScheduleStatus {
+  DRAFT
+  PUBLISHED
+}
+
 model Restaurant {
   id        String    @id @default(uuid())
   name      String
   address   String?
   phone     String?
   email     String?
+  kioskCode String?   @unique  // short code for the iPad kiosk URL
 
-  users     User[]
-  jobRoles  JobRole[]
+  users        User[]
+  jobRoles     JobRole[]
+  workingHours WorkingHours[]
+  schedules    Schedule[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -49,6 +57,7 @@ model JobRole {
   restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   users User[]
+  shifts Shift[]
 
   @@unique([restaurantId, name])
 }
@@ -81,6 +90,93 @@ model User {
   jobRoleId     String?
   jobRole       JobRole? @relation(fields: [jobRoleId], references: [id])
 
+  employeeNumber Int?   // 5-digit, unique per restaurant, auto-assigned
+
+  permissions    String[] // granted by Owner: MANAGE_EMPLOYEES, MANAGE_JOB_ROLES, EDIT_SCHEDULE, VIEW_TIME_ENTRIES
+
+  availability  Availability[]
+  timeEntries   TimeEntry[]
+  shifts        Shift[]
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@unique([restaurantId, employeeNumber])
+}
+
+model Availability {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  weekStart DateTime  // Monday 00:00:00 UTC of the target week
+  dayOfWeek Int       // 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat 7=Sun
+
+  startTime String    // "09:00"
+  endTime   String    // "17:00"
+
+  note      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, weekStart, dayOfWeek])
+}
+
+model WorkingHours {
+  id           String     @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  dayOfWeek Int    // 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat 7=Sun
+  startTime String // "11:00"
+  endTime   String // "14:00"
+  minStaff  Int    @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TimeEntry {
+  id       String    @id @default(uuid())
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  checkIn  DateTime
+  checkOut DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Schedule {
+  id           String         @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  weekStart    DateTime       // Monday 00:00:00 UTC
+  status       ScheduleStatus @default(DRAFT)
+  shifts       Shift[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([restaurantId, weekStart])
+}
+
+model Shift {
+  id         String   @id @default(uuid())
+  scheduleId String
+  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobRoleId  String
+  jobRole    JobRole  @relation(fields: [jobRoleId], references: [id], onDelete: Restrict)
+  date       DateTime // Calendar date at 00:00:00 UTC
+  startTime  String   // "09:00"
+  endTime    String   // "17:00"
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([scheduleId, date, startTime])
+  @@index([userId, date])
 }

@@ -20,8 +20,7 @@ interface AuthenticatedRequest extends Request {
 export class RestaurantController {
   constructor(private readonly restaurantService: RestaurantService) {}
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Owner', 'Manager')
+  @UseGuards(JwtAuthGuard)
   @Get()
   findOne(@Req() request: AuthenticatedRequest) {
     return this.restaurantService.findOne(request.user.restaurantId);
