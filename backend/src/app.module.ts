@@ -11,6 +11,7 @@ import { TimeEntriesModule } from './time-entries/time-entries.module';
 import { UsersModule } from './users/users.module';
 import { JobRolesModule } from './job-roles/job-roles.module';
 import { WorkingHoursModule } from './working-hours/working-hours.module';
+import { SchedulesModule } from './schedules/schedules.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { WorkingHoursModule } from './working-hours/working-hours.module';
     JobRolesModule,
     AvailabilityModule,
     WorkingHoursModule,
+    SchedulesModule,
     KioskModule,
     TimeEntriesModule,
   ],
